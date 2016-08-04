@@ -1,2 +1,2 @@
-# Twitter2Telegram
-Send Twitter updates to Telegram channels
+# Twitter2Chat
+Send Twitter updates to Chats (Telegram)
