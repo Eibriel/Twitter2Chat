@@ -38,7 +38,9 @@ class t2statusnet:
         except requests.exceptions.Timeout:
             #self.logger.error("api.telegram.org Timeout")
             return None
+        print ("###TELEGRAM###")
         print (r.text)
+        print ("###")
         return r
 
     def send_to_statusnet(self, message, gnusocial, password):
@@ -53,7 +55,7 @@ class t2statusnet:
         # , 'media_ids'
         text = ''
         if 'retweeted_status' in message:
-           print(message['retweeted_status']['user'])
+           #print(message['retweeted_status']['user'])
            text = '♻ @{0}: {1}'.format(message['retweeted_status']['user']['screen_name'], message['retweeted_status']['text'])
         else:
             text = message['text']
@@ -137,13 +139,42 @@ class t2statusnet:
 
             if len(twits) > 0:
                 for twit in reversed(twits):
-                    print(twit['text'])
+                    print ("###TWITTER###")
+                    print(twit)
+                    print ("###")
+
+                    if 'retweeted_status' in twit:
+                        #print(twit['retweeted_status']['user'])
+                        text = '♻ @{0}: {1}'.format(twit['retweeted_status']['user']['screen_name'], twit['retweeted_status']['text'])
+                    else:
+                        text = twit['text']
+                        #params = {'status' : text.encode('utf-8')}
+
+                    text = text.replace("@", "#")
+
+                    for url in twit["entities"]["urls"]:
+                       if url["expanded_url"]:
+                           text = text.replace(url["url"], url["expanded_url"])
+
+
                     msg = {
                         'chat_id': channel_id,
-                        'text': twit['text'],
+                        'text': text,
                     }
                     send_stat = self.send_to_bot('sendMessage', data = msg, token = token)
+
+
+                    if "media" in twit["entities"]:
+                        for media in twit["entities"]["media"]:
+                            if media["type"] == "photo":
+                                print (media["media_url_https"])
+                                msg = {
+                                    'chat_id': channel_id,
+                                    'text': media["media_url_https"],
+                                }
+                                send_stat = self.send_to_bot('sendMessage', data = msg, token = token)
                     #send_stat = self.send_to_statusnet(twit, gnusocial, password)
+
                 if send_stat:
                     twitter_data[twitter_user]['last_tweet'] = twits[0]['id_str']
                     with open(self.savefile, 'w') as data_file:
